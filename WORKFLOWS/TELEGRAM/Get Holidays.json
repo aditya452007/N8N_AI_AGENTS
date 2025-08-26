@@ -1,0 +1,150 @@
+{
+  "name": "Get Holidays",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "en-gb.indian#holiday@group.v.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Holidays in India"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b8b9ec2c-cd7b-4095-812c-6a69f346e0f7",
+      "name": "Get many events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Zw53Iy5txkgRqlAn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Helper to format as dd-mm-yyyy\nconst formatDate = (dateStr) => {\n  const d = new Date(dateStr);\n  const day = String(d.getDate()).padStart(2, \"0\");\n  const month = String(d.getMonth() + 1).padStart(2, \"0\");\n  const year = d.getFullYear();\n  return `${day}-${month}-${year}`;\n};\n\n// Map only required fields\nlet events = items.map(item => {\n  return {\n    json: {\n      date: formatDate(item.json.start.date),\n      festival: item.json.summary\n    }\n  };\n});\n\n// Sort by actual date\nevents.sort((a, b) => new Date(a.json.date.split(\"-\").reverse().join(\"-\")) - new Date(b.json.date.split(\"-\").reverse().join(\"-\")));\n\nreturn events;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "18c37068-a900-4981-8737-1e0a20d31ee5",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "chatId": "5567562308",
+        "text": "={{ $json.date }}  -  {{ $json.festival }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "299b6ce2-e03d-4ea7-96c2-61c0a440b6d1",
+      "name": "Send a text message",
+      "webhookId": "1c9b80b6-47da-4476-b105-fbccf4e7e09e",
+      "credentials": {
+        "telegramApi": {
+          "id": "BLAhUQxfOzvflsFi",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1062e013-991b-4e4b-8e7e-8a4902911427",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "# 📌 AI Agent: Automated Holiday Fetcher & Notifier  \n\n## 🔄 Workflow  \n1. **Trigger (Every Sunday)**  \n   - The AI Agent is scheduled to run every Sunday.  \n\n2. **Data Fetching**  \n   - Connects to **Google Calendar API**.  \n   - Retrieves upcoming holiday **date** and **name**.  \n\n3. **Processing**  \n   - Extracts and formats the holiday details into a neat JSON/text format.  \n\n4. **Notification Delivery**  \n   - Sends the formatted holiday update directly to your **Telegram Bot**.  \n   - The bot then delivers it to the designated chat/group.  \n\n---\n\n## 🎯 Use Case  \n- **Personal Reminder** → Never miss upcoming holidays.  \n- **Community Updates** → Share weekly holiday info with family, friends, or team members in a Telegram group.  \n- **Business Productivity** → Keep teams aligned on holidays for planning, workload distribution, or customer announcements.  \n- **Automation for Creators** → Social media managers, HR teams, or event planners can repurpose this info to schedule posts or reminders.  \n\n---\n\n## ✅ Pros  \n- **Fully Automated** → Runs weekly without manual intervention.  \n- **Reliable** → Uses Google Calendar (trusted source of holiday data).  \n- **Convenient** → Delivers info where people already spend time (Telegram).  \n- **Customizable** → Can be extended to fetch multiple calendars, regional holidays, or push alerts to other platforms (Slack, WhatsApp, Email).  \n- **Time-Saving** → Eliminates the need to check calendars manually.  \n\n---\n\n🚀 In short: This AI Agent acts like a **personal holiday assistant** that ensures you and your community are always holiday-ready — without lifting a finger.  \n\n",
+        "height": 944,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "a2f07784-a9c5-4379-95c0-814f5fcd559b",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "48013d93-2ac7-4efa-be51-90b154d7fbb4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "58efd461ef9d72698eba5370adea41085c1a423caa33d136a0572e4eef1b6807"
+  },
+  "id": "M0hIpZkzqvmeY0St",
+  "tags": []
+}
