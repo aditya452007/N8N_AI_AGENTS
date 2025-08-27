@@ -1,0 +1,852 @@
+{
+  "name": "send update",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -144
+      ],
+      "id": "5829d99b-9d9e-451f-89e1-1003c9232f6c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.youtube.com/feeds/videos.xml?channel_id= {{ $json['[\\'YOUTUBE CHANNEL\\']'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "f143d1d2-e3b1-476d-9a9a-6611343e4f83",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "['YOUTUBE CHANNEL']",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1a921f0d-67bf-4ee2-ae2b-b2c5cf66d98f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Tittle :  {{ $json.title }}\n\ncreator : {{ $json.author }}\n\nlink : {{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        -128
+      ],
+      "id": "eb6e53fb-5488-434a-ac66-03b7eef95c75",
+      "name": "Discord",
+      "webhookId": "ba2eefe8-8078-46f7-b15b-e1a3b6c9c2fd",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "jq5hF7gC02og84dh",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "153c3362-d67c-4555-a781-d558c2bb9577",
+              "leftValue": "={{ $json.pubDate.toDate() }}",
+              "rightValue": "={{ $now.minus({ days: 2 }).startOf('day') }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "8d289bdd-d941-496b-b1a5-dd36fe0ad9ac",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        112
+      ],
+      "id": "67a26aa2-4d91-4e8c-9a80-4e121bd9cdd0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "5567562308",
+        "text": "=Tittle :  {{ $json.title }}\n\ncreator : {{ $json.author }}\n\nlink : {{ $json.link }}\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        128
+      ],
+      "id": "1f1d7535-91f2-400b-bb2b-72bdf6752244",
+      "name": "Send a text message",
+      "webhookId": "76846708-0dd1-41cb-a729-08f0aeedef87",
+      "credentials": {
+        "telegramApi": {
+          "id": "BLAhUQxfOzvflsFi",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 208,
+        "width": 848,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "078b5073-a5fd-42d3-9eb6-9282269cb18a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "387ad970-74f9-4fe6-916a-bd1cf9d3463e",
+              "name": "YOUTUBE CHANNEL",
+              "value": "[\"UC9x0AN7BWHpCDHSm9NiJFJQ\",\"UCvQECJukTDE2i6aCoMnS-Vg\",\"UCzCsyvyrq38R6TnztEzOmgg\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "cbb8e16c-4b76-46b3-bd80-857ad1b7356b",
+      "name": "YOUTUBE CHANNEL ID"
+    },
+    {
+      "parameters": {
+        "content": "# 📺 n8n AI Agent – Daily YouTube Video Fetcher\n\nThis n8n workflow automatically fetches the **latest uploaded YouTube videos** from a list of channels and sends them to your preferred platforms (Discord, Telegram, Gmail, WhatsApp, Slack, etc.).  \n\n---\n\n## 🚀 Features\n- ✅ Runs automatically **every day** (or custom interval).  \n- ✅ Fetches videos from **multiple YouTube channels**.  \n- ✅ Filters uploads from the **last 24 hours**.  \n- ✅ Sends results to **Discord, Telegram**, and can be extended to Gmail, WhatsApp, or Slack.  \n- ✅ Modular and easy to customize.\n\n---\n\n## ⚙️ How It Works\n1. **Trigger** – A daily cron job starts the workflow.  \n2. **Edit Set (YouTube Channel IDs)** – Provide your list of channel IDs.  \n3. **Split in Batches** – Each channel ID is processed individually.  \n4. **RSS Read** – Fetches the latest videos from the channel’s YouTube RSS feed.  \n5. **Filter (24-hour Uploads)** – Only keep videos uploaded in the last 24 hours.  \n6. **Send to Platform(s)** – The new video links are pushed to:  \n   - Discord Server  \n   - Telegram Bot  \n   - (Optional) Gmail, WhatsApp, Slack  \n\n---\n\n## 🛠️ Setup Guide\n\n### 1. Prerequisites\n- Installed **[n8n](https://n8n.io/)** (self-hosted or cloud).\n- Discord Webhook URL / Telegram Bot Token (if sending notifications).\n- YouTube Channel IDs for the creators you want to track.\n\n---\n\n### 2. Workflow Configuration\n1. **Trigger**  \n   - Use the `Cron` node.  \n   - Set it to run once daily (or any frequency you prefer).\n\n2. **Edit Set Node**  \n   - Add your YouTube channel IDs.  \n   - Example:  \n     ```\n     UC_x5XG1OV2P6uZZ5FSM9Ttw\n     UCVHFbqXqoYvEWM1Ddxl0QDg\n     ```\n\n3. **Split in Batches Node**  \n   - Splits the channel IDs for individual processing.\n\n4. **RSS Read Node**  \n   - Configure the URL as:  \n     ```\n     https://www.youtube.com/feeds/videos.xml?channel_id={{$json[\"channelId\"]}}\n     ```\n\n5. **Filter Node**  \n   - Keep only items where `pubDate` is within the last 24 hours.\n\n6. **Send to Platform**  \n   - **Discord**: Use the Webhook node.  \n   - **Telegram**: Use the Telegram node.  \n   - **Gmail/WhatsApp/Slack**: Add corresponding nodes for integration.\n\n---\n\n## 🔌 Example Output\nWhen a new video is uploaded in the last 24 hours, your chosen platforms will receive messages like:\n\nTittle :  {{ $json.title }}\n\ncreator : {{ $json.author }}\n\nlink : {{ $json.link }}\n\n---\n\n## 🔧 Customization\n- Change the **Cron frequency** (e.g., hourly instead of daily).  \n- Add multiple destinations (send the same video to **Discord + Telegram + Gmail**).  \n- Extend filters (e.g., keywords in title/description).  \n- Use **AI post-processing** to generate custom summaries or captions before posting.\n\n---\n\n## 📜 License\nMIT License – Free to use and modify.\n\n---\n\n## 🤝 Contributing\nPull requests are welcome! If you’d like to improve this workflow (e.g., add AI video summaries or advanced filtering), feel free to contribute.\n\n---\n\n## 📢 Support\n- open an issue in this repository.\n\n",
+        "height": 2512,
+        "width": 1824
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2096,
+        -928
+      ],
+      "typeVersion": 1,
+      "id": "a10fb2cc-3449-4e0e-bbe0-bc014d940cbc",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {
+    "Split Out": [
+      {
+        "json": {
+          "['YOUTUBE CHANNEL']": "UC9x0AN7BWHpCDHSm9NiJFJQ"
+        }
+      },
+      {
+        "json": {
+          "['YOUTUBE CHANNEL']": "UCvQECJukTDE2i6aCoMnS-Vg"
+        }
+      },
+      {
+        "json": {
+          "['YOUTUBE CHANNEL']": "UCzCsyvyrq38R6TnztEzOmgg"
+        }
+      }
+    ],
+    "RSS Read": [
+      {
+        "json": {
+          "title": "Trying the Strongest Coffee in the World (7 espressos in 1 shot!!)",
+          "link": "https://www.youtube.com/shorts/_u1V5GLzP98",
+          "pubDate": "2025-08-25T21:00:55.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:_u1V5GLzP98",
+          "isoDate": "2025-08-25T21:00:55.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "the most POWERFUL automation tool I’ve EVER SEEN! (N8n)",
+          "link": "https://www.youtube.com/shorts/vtPOBzq4zrs",
+          "pubDate": "2025-08-14T18:37:44.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:vtPOBzq4zrs",
+          "isoDate": "2025-08-14T18:37:44.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Hacking AI is TOO EASY (this should be illegal)",
+          "link": "https://www.youtube.com/watch?v=Qvx2sVgQ-u0",
+          "pubDate": "2025-08-12T17:19:12.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:Qvx2sVgQ-u0",
+          "isoDate": "2025-08-12T17:19:12.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "You NEED to Use n8n RIGHT NOW!! (Free, Local, Private)",
+          "link": "https://www.youtube.com/watch?v=ONgECvZNI3o",
+          "pubDate": "2025-07-16T15:41:10.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:ONgECvZNI3o",
+          "isoDate": "2025-07-16T15:41:10.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "why are Hackers going to Las Vegas?",
+          "link": "https://www.youtube.com/shorts/3HiWCSYCIZE",
+          "pubDate": "2025-07-14T23:01:59.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:3HiWCSYCIZE",
+          "isoDate": "2025-07-14T23:01:59.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "I'm done with the AI hype",
+          "link": "https://www.youtube.com/watch?v=kxYh9RwLUFw",
+          "pubDate": "2025-07-01T21:09:15.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:kxYh9RwLUFw",
+          "isoDate": "2025-07-01T21:09:15.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "got AI anxiety? Do this RIGHT NOW!",
+          "link": "https://www.youtube.com/watch?v=3BXE0e3QZ4U",
+          "pubDate": "2025-06-25T14:00:03.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:3BXE0e3QZ4U",
+          "isoDate": "2025-06-25T14:00:03.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "I went to the LARGEST networking event in the world!",
+          "link": "https://www.youtube.com/watch?v=tTQ4vfCdMYw",
+          "pubDate": "2025-06-21T14:24:30.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:tTQ4vfCdMYw",
+          "isoDate": "2025-06-21T14:24:30.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "21,000 Hackers go HERE every Summer",
+          "link": "https://www.youtube.com/shorts/dG8VTdEoatM",
+          "pubDate": "2025-06-18T19:24:59.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:dG8VTdEoatM",
+          "isoDate": "2025-06-18T19:24:59.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "I'm worried about Network Engineers.....",
+          "link": "https://www.youtube.com/watch?v=4hkJX7LBdXc",
+          "pubDate": "2025-06-13T16:53:13.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:4hkJX7LBdXc",
+          "isoDate": "2025-06-13T16:53:13.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "This makes audits stupidly easy",
+          "link": "https://www.youtube.com/shorts/G5OM24KrAH0",
+          "pubDate": "2025-06-03T19:20:16.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:G5OM24KrAH0",
+          "isoDate": "2025-06-03T19:20:16.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "What is a problem that you see in the world, one that you are actively trying to solve?",
+          "link": "https://www.youtube.com/shorts/Oc-iNQSxUMQ",
+          "pubDate": "2025-05-22T22:59:18.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:Oc-iNQSxUMQ",
+          "isoDate": "2025-05-22T22:59:18.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "37 INSANE Linux Commands you NEED to Know in 2025",
+          "link": "https://www.youtube.com/watch?v=6P-vjgPx9ww",
+          "pubDate": "2025-05-22T15:46:41.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:6P-vjgPx9ww",
+          "isoDate": "2025-05-22T15:46:41.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "If you see this, you might be hacked.",
+          "link": "https://www.youtube.com/shorts/XS6615BRiX4",
+          "pubDate": "2025-05-02T20:38:37.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:XS6615BRiX4",
+          "isoDate": "2025-05-02T20:38:37.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Meet the new Bernard Hackwell",
+          "link": "https://www.youtube.com/shorts/8fMRim06fAE",
+          "pubDate": "2025-05-02T16:27:02.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:8fMRim06fAE",
+          "isoDate": "2025-05-02T16:27:02.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "How to deal with difficult people",
+          "link": "https://www.youtube.com/shorts/nUTtu8atlD8",
+          "pubDate": "2025-08-25T16:03:03.000Z",
+          "author": "Big Think",
+          "id": "yt:video:nUTtu8atlD8",
+          "isoDate": "2025-08-25T16:03:03.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Why we explore, even when there’s no payoff",
+          "link": "https://www.youtube.com/watch?v=T3AS_-2GnDI",
+          "pubDate": "2025-08-25T13:00:51.000Z",
+          "author": "Big Think",
+          "id": "yt:video:T3AS_-2GnDI",
+          "isoDate": "2025-08-25T13:00:51.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "We are biased to do nothing",
+          "link": "https://www.youtube.com/shorts/URSVWzOVZ3k",
+          "pubDate": "2025-08-22T17:02:52.000Z",
+          "author": "Big Think",
+          "id": "yt:video:URSVWzOVZ3k",
+          "isoDate": "2025-08-22T17:02:52.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Sean Carroll explains why physics is both simple and impossible | Full Interview",
+          "link": "https://www.youtube.com/watch?v=_TBNJyztai0",
+          "pubDate": "2025-08-22T13:01:21.000Z",
+          "author": "Big Think",
+          "id": "yt:video:_TBNJyztai0",
+          "isoDate": "2025-08-22T13:01:21.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Sam Harris: Experience emotions without being consumed by them",
+          "link": "https://www.youtube.com/watch?v=_VdkmOqcYNI",
+          "pubDate": "2025-08-21T13:01:13.000Z",
+          "author": "Big Think",
+          "id": "yt:video:_VdkmOqcYNI",
+          "isoDate": "2025-08-21T13:01:13.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "How big are galaxies?",
+          "link": "https://www.youtube.com/shorts/MjfOtj07JcY",
+          "pubDate": "2025-08-20T17:03:17.000Z",
+          "author": "Big Think",
+          "id": "yt:video:MjfOtj07JcY",
+          "isoDate": "2025-08-20T17:03:17.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "The science of spirituality, and how it can change your brain",
+          "link": "https://www.youtube.com/watch?v=DkunRFYxOzA",
+          "pubDate": "2025-08-20T13:00:23.000Z",
+          "author": "Big Think",
+          "id": "yt:video:DkunRFYxOzA",
+          "isoDate": "2025-08-20T13:00:23.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Why emotional intelligence starts before memory does",
+          "link": "https://www.youtube.com/watch?v=Y8xshb9t3NI",
+          "pubDate": "2025-08-19T13:01:03.000Z",
+          "author": "Big Think",
+          "id": "yt:video:Y8xshb9t3NI",
+          "isoDate": "2025-08-19T13:01:03.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "How to say \"no\" the right way",
+          "link": "https://www.youtube.com/shorts/RxSXiXePMFM",
+          "pubDate": "2025-08-18T15:02:42.000Z",
+          "author": "Big Think",
+          "id": "yt:video:RxSXiXePMFM",
+          "isoDate": "2025-08-18T15:02:42.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "The neuroscience of extremes: Ruthless psychopathy to extraordinary generosity | Abigail Marsh",
+          "link": "https://www.youtube.com/watch?v=rK-UfTCGOdU",
+          "pubDate": "2025-08-15T13:01:50.000Z",
+          "author": "Big Think",
+          "id": "yt:video:rK-UfTCGOdU",
+          "isoDate": "2025-08-15T13:01:50.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Use the Triple Check Method to jumpstart your brain | Anne-Laure Le Cunff",
+          "link": "https://www.youtube.com/watch?v=fbA-YwT4MN8",
+          "pubDate": "2025-08-14T13:01:15.000Z",
+          "author": "Big Think",
+          "id": "yt:video:fbA-YwT4MN8",
+          "isoDate": "2025-08-14T13:01:15.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "3 experts reveal how psychedelics can expand the walls of perception",
+          "link": "https://www.youtube.com/watch?v=vnT8FCqy9B4",
+          "pubDate": "2025-08-13T13:01:43.000Z",
+          "author": "Big Think",
+          "id": "yt:video:vnT8FCqy9B4",
+          "isoDate": "2025-08-13T13:01:43.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Manage your emotions, in 9 minutes",
+          "link": "https://www.youtube.com/watch?v=Rk9US1FMUjQ",
+          "pubDate": "2025-08-12T13:00:57.000Z",
+          "author": "Big Think",
+          "id": "yt:video:Rk9US1FMUjQ",
+          "isoDate": "2025-08-12T13:00:57.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Yuval Noah Harari: How to safeguard your mind in the age of junk information",
+          "link": "https://www.youtube.com/watch?v=K1OvbwY6GPM",
+          "pubDate": "2025-08-11T13:00:47.000Z",
+          "author": "Big Think",
+          "id": "yt:video:K1OvbwY6GPM",
+          "isoDate": "2025-08-11T13:00:47.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Would you survive a week in Ancient Rome? | Mary Beard: Full Interview",
+          "link": "https://www.youtube.com/watch?v=sxtxmG_H-To",
+          "pubDate": "2025-08-08T13:01:54.000Z",
+          "author": "Big Think",
+          "id": "yt:video:sxtxmG_H-To",
+          "isoDate": "2025-08-08T13:01:54.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "What EXACTLY is Bastion? | SSH Jump, Port Forwarding & Netflix",
+          "link": "https://www.youtube.com/watch?v=da-qb91mD6g",
+          "pubDate": "2025-08-25T10:01:03.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:da-qb91mD6g",
+          "isoDate": "2025-08-25T10:01:03.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Single Sign-On (SSO) Explained in 10 Minutes | SAML, OIDC & SCIM",
+          "link": "https://www.youtube.com/watch?v=5KChrGWFcpk",
+          "pubDate": "2025-08-21T10:00:08.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:5KChrGWFcpk",
+          "isoDate": "2025-08-21T10:00:08.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "AWS S3 | Availability vs Durability",
+          "link": "https://www.youtube.com/shorts/bokPMx-N2uA",
+          "pubDate": "2025-08-18T04:00:38.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:bokPMx-N2uA",
+          "isoDate": "2025-08-18T04:00:38.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Master 3 Essential Design Patterns in 10 Minutes | Decorator, Command, Adapter",
+          "link": "https://www.youtube.com/watch?v=USLwIwyWVIM",
+          "pubDate": "2025-08-15T10:00:59.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:USLwIwyWVIM",
+          "isoDate": "2025-08-15T10:00:59.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Git Branching - Gitlab Flow - Git Mastery Crash Course",
+          "link": "https://www.youtube.com/shorts/XZzFUjyxXYQ",
+          "pubDate": "2025-08-14T04:00:41.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:XZzFUjyxXYQ",
+          "isoDate": "2025-08-14T04:00:41.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Git Feature Branching  - Git Mastery Crash Course",
+          "link": "https://www.youtube.com/shorts/QPVH19td8ME",
+          "pubDate": "2025-08-13T04:00:36.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:QPVH19td8ME",
+          "isoDate": "2025-08-13T04:00:36.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "How SSH Works | Keys, Encryption & Real-World Examples",
+          "link": "https://www.youtube.com/watch?v=s-vhqtyUF4I",
+          "pubDate": "2025-08-12T10:01:36.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:s-vhqtyUF4I",
+          "isoDate": "2025-08-12T10:01:36.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Git Branching - Github Flow - Git Mastery Crash Course",
+          "link": "https://www.youtube.com/shorts/RlEDNgdNNs8",
+          "pubDate": "2025-08-12T04:00:37.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:RlEDNgdNNs8",
+          "isoDate": "2025-08-12T04:00:37.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Git Branching: Trunk-Based Development",
+          "link": "https://www.youtube.com/shorts/ApR_6y6PxYA",
+          "pubDate": "2025-08-11T04:00:17.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:ApR_6y6PxYA",
+          "isoDate": "2025-08-11T04:00:17.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "MCP: The “USB-C” for AI Systems | Connect GPT, Claude & Real-World Tools",
+          "link": "https://www.youtube.com/watch?v=PS9kw4W52Gs",
+          "pubDate": "2025-08-10T10:00:41.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:PS9kw4W52Gs",
+          "isoDate": "2025-08-10T10:00:41.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Git Branching - Git Flow - Git Mastery Crash Course",
+          "link": "https://www.youtube.com/shorts/MmTiyF6Md5g",
+          "pubDate": "2025-08-09T12:21:11.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:MmTiyF6Md5g",
+          "isoDate": "2025-08-09T12:21:11.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "The Illusion of Thinking | Apple Just Exposed AI’s Fake Reasoning",
+          "link": "https://www.youtube.com/watch?v=jr1dz6cOnDM",
+          "pubDate": "2025-08-07T10:01:33.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:jr1dz6cOnDM",
+          "isoDate": "2025-08-07T10:01:33.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Building a Scalable AuthN/AuthZ Software System using Supertokens",
+          "link": "https://www.youtube.com/shorts/97Z9zXZoSlw",
+          "pubDate": "2025-08-06T15:47:45.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:97Z9zXZoSlw",
+          "isoDate": "2025-08-06T15:47:45.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "What Happens When You Login? | IAM Secrets Used by Big Tech",
+          "link": "https://www.youtube.com/watch?v=esw0GzYWUyw",
+          "pubDate": "2025-08-05T09:00:55.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:esw0GzYWUyw",
+          "isoDate": "2025-08-05T09:00:55.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Quick Sort Explained Visually | Pivot, Partition, and Recursion",
+          "link": "https://www.youtube.com/watch?v=uqI4u9wtkU0",
+          "pubDate": "2025-08-03T03:02:54.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:uqI4u9wtkU0",
+          "isoDate": "2025-08-03T03:02:54.000Z"
+        }
+      }
+    ],
+    "Filter": [
+      {
+        "json": {
+          "title": "Trying the Strongest Coffee in the World (7 espressos in 1 shot!!)",
+          "link": "https://www.youtube.com/shorts/_u1V5GLzP98",
+          "pubDate": "2025-08-25T21:00:55.000Z",
+          "author": "NetworkChuck",
+          "id": "yt:video:_u1V5GLzP98",
+          "isoDate": "2025-08-25T21:00:55.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "How to deal with difficult people",
+          "link": "https://www.youtube.com/shorts/nUTtu8atlD8",
+          "pubDate": "2025-08-25T16:03:03.000Z",
+          "author": "Big Think",
+          "id": "yt:video:nUTtu8atlD8",
+          "isoDate": "2025-08-25T16:03:03.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "Why we explore, even when there’s no payoff",
+          "link": "https://www.youtube.com/watch?v=T3AS_-2GnDI",
+          "pubDate": "2025-08-25T13:00:51.000Z",
+          "author": "Big Think",
+          "id": "yt:video:T3AS_-2GnDI",
+          "isoDate": "2025-08-25T13:00:51.000Z"
+        }
+      },
+      {
+        "json": {
+          "title": "What EXACTLY is Bastion? | SSH Jump, Port Forwarding & Netflix",
+          "link": "https://www.youtube.com/watch?v=da-qb91mD6g",
+          "pubDate": "2025-08-25T10:01:03.000Z",
+          "author": "ByteMonk",
+          "id": "yt:video:da-qb91mD6g",
+          "isoDate": "2025-08-25T10:01:03.000Z"
+        }
+      }
+    ],
+    "Discord": [
+      {
+        "json": {
+          "success": true
+        }
+      },
+      {
+        "json": {
+          "success": true
+        }
+      },
+      {
+        "json": {
+          "success": true
+        }
+      },
+      {
+        "json": {
+          "success": true
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {}
+      }
+    ],
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-08-27T04:41:06.277-04:00",
+          "Readable date": "August 27th 2025, 4:41:06 am",
+          "Readable time": "4:41:06 am",
+          "Day of week": "Wednesday",
+          "Year": "2025",
+          "Month": "August",
+          "Day of month": "27",
+          "Hour": "04",
+          "Minute": "41",
+          "Second": "06",
+          "Timezone": "America/New_York (UTC-04:00)"
+        }
+      }
+    ],
+    "YOUTUBE CHANNEL ID": [
+      {
+        "json": {
+          "YOUTUBE CHANNEL": [
+            "UC9x0AN7BWHpCDHSm9NiJFJQ",
+            "UCvQECJukTDE2i6aCoMnS-Vg",
+            "UCzCsyvyrq38R6TnztEzOmgg"
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "YOUTUBE CHANNEL ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "YOUTUBE CHANNEL ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "YOUTUBE CHANNEL ID": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e65992a4-9b8e-4b39-b81a-969aa39d3659",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "58efd461ef9d72698eba5370adea41085c1a423caa33d136a0572e4eef1b6807"
+  },
+  "id": "2yXqVM4Ms8akTDpT",
+  "tags": []
+}
