@@ -1,0 +1,373 @@
+{
+  "name": "🤓 Conversion Rate Optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Conversion Rate Optimizer",
+        "formDescription": "Your Landing Page is Leaking Sales—Fix It Now",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Landing Page Url",
+              "placeholder": "https://yuzuu.co",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13d3cdd2-8d2e-470f-a343-8720c6da82c3",
+      "name": "Landing Page Url",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        544,
+        -432
+      ],
+      "webhookId": "0818531a-3892-49f6-af78-cde8d538b205",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['Landing Page Url'] }}",
+        "options": {}
+      },
+      "id": "ebe5bc67-35fd-449f-a67d-98b92eaaf543",
+      "name": "Scrape Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        752,
+        -432
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional expert in Conversion Rate Optimization who helps business founders & CMOs improve their landing pages. You are a world-class expert in analysing landing pages, roasting them, and providing valuable Conversion Rate Optimization Ideas to help businesses increase conversions.  \n\nGOAL\nI want you to roast my landing page and deliver recommendations to improve the Conversion Rate. I will use this roast to understand what's wrong with my landing page and make improvements based on your recommendations. \n\nROAST STRUCTURE\nThis framework consists of 2 blocks of insights: \nRoast: a detailed roast of my landing page.\nRecommendations: 10 conversion rate optimization ideas based on your roast and analysis.\n\nROAST & RECOMMENDATIONS CRITERIA\nFor the Roast: Be friendly & casual. Talk like a human to another human. \nFor the Roast: Be unconventional & fun. I don't want to be bored. A roast must agitate the reader's feelings. \nFor the Roast: You will make a full landing page analysis, and explain what's wrong. You will use this analysis to make recommendations for The Recommendations.  \nFor the Recommendations: Be specific. Write exactly what I need to do. Your detailed description for each Conversion Rate Optimization Idea should be self-explanatory. For example, instead of saying “Rewrite your headline”, give me improved ideas for the headline. Your job is to return advanced insights personalised only for my specific landing page. This is a critical law for you.\nFor the Recommendations: Be creative. Don't return trivial and outdated Conversion Rate Optimization ideas that the average marketer would recommend. Prioritise unconventional CRO tactics so I get real value from you here. Think like the top 0.1% conversion rate optimization expert.\nFor the Recommendations: Prioritise Conversion Rate Optimization Ideas that are relevant in the 2024 digital marketing space. \nFor the Recommendations: Your Conversion Rate Optimization ideas must be impactful. Prioritise Conversion Rate Optimization Ideas that adds a wow effect.\nFor the Recommendations: Your Conversion Rate Optimization ideas must be easy to implement.\nFor the Recommendations: Personalise your ideas with references to the Roast you made. I don’t want to read 10 generic ideas that can work for anyone (for example, “add a live chat” or “offer a free trial”). I need a 100% personalised response.\n\nHere is the content of my landing page: {{ $json.data }}",
+        "options": {}
+      },
+      "id": "2784f820-5e31-40bc-9ece-d5852d423e84",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        976,
+        -432
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -224
+      ],
+      "id": "4ff2e1f7-2203-4141-8f44-562ec748a898",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1XOF9sUJ0nX7ni5o",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "CRO Result",
+        "completionMessage": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        -432
+      ],
+      "id": "5d78ff74-c335-42c9-ab04-3c5f9160b366",
+      "name": "Form",
+      "webhookId": "ffa6fe33-0f73-4659-996a-5dcdc9c88384"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3216,
+        -624
+      ],
+      "id": "2ac8fd53-8282-422d-9a06-8e9dea5e6aef",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json[''] }}",
+        "options": {}
+      },
+      "id": "62c825b7-3e2a-4410-b3de-d0eb5ca3b806",
+      "name": "Scrape Website1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3456,
+        -544
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Conversion Rate Optimization (CRO) auditor and site performance analyst.  \nInput: `{{ $json }}` — this contains the landing page HTML/text in `data` and may include metadata fields such as `response_time`, `response_time_ms`, `headers`, `title`, `meta_description`, etc. Use **only** the provided `{{ $json }}` for your analysis (do not call external sites).\n\nOutput format: produce **human-readable text** (no JSON, no code fences, no machine-only formats). Structure the output with these labeled sections and keep language clear and actionable for a non-technical product/marketing stakeholder.\n\n1) Summary (1–2 short paragraphs)\n- One sentence that states the observed response time (in ms) or “response time: unknown” if no timing metadata is present.\n- One sentence that gives a concise website rating between 0.0 and 5.0 (one decimal) with a short justification.\n\n2) Potential Gaps (bulleted list)\n- Provide 6–10 clear, evidence-based gap statements (each 1–2 sentences). For each gap:\n  - Name the gap (e.g., “Missing clear H1 / headline”, “Slow hero images / large assets”, “No visible trust signals”, “Weak or unclear CTA”, “Form friction”, “Missing meta description / poor SEO snippet”, “Accessibility issues”, “No mobile-optimized hero”, “Missing structured data/schema”).\n  - Immediately follow with the specific evidence from `{{ $json }}` that led you to that conclusion (quote the exact part of `{{ $json.data }}` or the metadata field you used, e.g., “`<h1>…` missing”, “meta description empty”, “response_time: '420 ms'”, “hero image src shows >1.5MB” — if the exact size isn’t present, say “inferred from large image filenames / heavy hero markup”).\n  - If you must infer something because the data is incomplete, label the line with “(inferred — low/medium/high confidence)”.\n\n3) Priority Fixes (ranked 1–5)\n- List the top 5 fixes, ranked. Each fix must be:\n  - Specific (exactly what to change), and\n  - Actionable (a short how-to or measurable acceptance criterion), e.g., “Compress hero images to <300KB and use `loading=lazy`; re-measure response_time_ms to <300ms”, or “Replace vague CTA ‘Learn More’ with concrete CTA ‘Get my free onboarding checklist’ and A/B test headline + CTA for 2 weeks”.\n- For each fix, include an estimated confidence level (high/medium/low) based only on the provided metadata.\n\n4) Quick wins (3 items)\n- Three very easy items that the marketing/product team can implement within a day (e.g., update headline copy, add trust badge near CTA, ensure meta description exists).\n\n5) One-sentence risk callout\n- Close with one sentence describing the single biggest risk to conversions implied by the data (e.g., “Slow load + unclear CTA = high drop-off on paid traffic”).\n\nTone & rules:\n- Be human, concise, and direct — speak to a product/marketing stakeholder.\n- No JSON, no extra technical logs, no code blocks — plain readable text with clear bullets and short sentences.\n- Use only evidence available in `{{ $json }}`; if you cannot confirm a fact from the input, mark it as inferred and show your confidence.\n\nExample (brief, for style guidance only — do not include this example in real output):\nSummary: response time 420 ms. Rating 3.2 — clear value proposition but heavy hero assets and missing trust signals.  \nPotential Gaps: • Missing H1 — no `<h1>` tag in `{{ $json.data }}` (inferred — medium confidence). • Large hero image — `hero.jpg` referenced with no `srcset` or lazy loading (evidence: `<img src=\"/assets/hero.jpg\">`) (high confidence). …  \nPriority Fixes: 1) Compress hero to <300KB + use `srcset` (high). 2) Add visible trust badges near CTA (high). …\n\n(End of prompt)\n",
+        "options": {}
+      },
+      "id": "404d213a-75ae-4861-a561-8d7aa8bbc109",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3696,
+        -544
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        -288
+      ],
+      "id": "97eb104e-2424-4a49-a417-8e9f3230a529",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1XOF9sUJ0nX7ni5o",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3456,
+        -720
+      ],
+      "id": "e2dc1d02-1da4-4334-9816-d313d1ca7df5",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        -624
+      ],
+      "id": "4ad5c9eb-909b-4d75-adc6-32e0192cce1d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2960,
+        -624
+      ],
+      "id": "41d1f180-41fe-4880-991c-18842bfb570b",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "content": "# 🧠 Website Audit & CRO Review Agent Workflow\n\n## 📋 Overview\nThis n8n workflow automates the process of **analyzing landing pages** for performance, usability, and conversion rate optimization (CRO) gaps using AI.  \nIt is designed for marketers, CRO specialists, and founders who want quick, human-readable insights about their websites — including response time, overall rating, and clear, actionable recommendations.\n\n---\n\n## ⚙️ How It Works\n\n1. **Trigger:**  \n   The workflow starts manually via the `Manual Trigger` node or can be connected to a scheduler if desired.\n\n2. **Data Source (Google Sheets):**  \n   - The workflow reads URLs or page data from a designated Google Sheet.  \n   - Each row represents one website or landing page entry to audit.\n\n3. **Looping (Split In Batches):**  \n   - Iterates through each sheet entry and processes them individually, ensuring large datasets don’t overload the AI model.\n\n4. **Website Scraping:**  \n   - The `HTTP Request` node (`Scrape Website1`) fetches the HTML or visible content of each page.\n   - This data is passed to the AI agent for structured analysis.\n\n5. **AI Processing (LangChain Agent):**  \n   - The AI Agent (`AI Agent1`) powered by **Google Gemini (PaLM)** evaluates each page.\n   - It uses an expert CRO prompt to generate a **human-readable analysis** with the following structure:\n     - **Summary:** Response time and rating (0.0–5.0)  \n     - **Potential Gaps:** Evidence-based issues from the HTML  \n     - **Priority Fixes:** Ranked list of actionable improvements  \n     - **Quick Wins:** 1-day implementation items  \n     - **Risk Callout:** The single biggest threat to conversions\n\n6. **Data Output (Google Sheets):**  \n   - Results are appended to a separate tab or sheet for easy tracking and reporting.\n   - You can later visualize these findings in Google Data Studio, Notion, or Airtable.\n\n---\n",
+        "height": 1040,
+        "width": 976
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1648,
+        -832
+      ],
+      "typeVersion": 1,
+      "id": "b989648f-6b03-4c5c-b49d-3fd5628d679a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 Conversion Rate Optimizer Workflow (AI-Powered)\n\n## 📋 Overview\nThis workflow automates **Conversion Rate Optimization (CRO) analysis** for any landing page using **n8n** and **Google Gemini AI**.  \nIt allows marketers, founders, or designers to instantly audit their landing page and receive expert-level insights — including page performance, weaknesses, and actionable recommendations to improve conversion rates.\n\nSimply input your landing page URL, and the workflow scrapes, analyzes, and returns a full CRO review directly in your browser.\n\n---\n\n## ⚙️ Workflow Logic\n\n### 1. 🧾 **Form Trigger – “Landing Page URL”**\n- The workflow begins when a user submits a landing page URL through the n8n form trigger.  \n- Form title: **“Conversion Rate Optimizer”**  \n- Form description: **“Your Landing Page is Leaking Sales—Fix It Now”**\n\n### 2. 🌐 **Scrape Website**\n- The workflow uses the **HTTP Request** node to fetch and extract HTML data from the provided URL.  \n- The scraped data (`{{ $json.data }}`) contains all visible page content and metadata needed for analysis.\n\n### 3. 🤖 **AI Agent (LangChain + Gemini)**\n- This node acts as a **Conversion Rate Optimization expert**, analyzing the HTML and producing a detailed, human-readable report.  \n- The agent identifies:\n  - Key conversion leaks  \n  - UX and copywriting weaknesses  \n  - Missing trust signals  \n  - CTA and layout inefficiencies  \n  - Specific recommendations for improvement  \n\n- The AI operates on a **custom prompt** that enforces deep, creative, and 100% personalized CRO insights — not generic marketing advice.\n\n### 4. 🧠 **Google Gemini Chat Model**\n- Powers the AI Agent using Google’s **PaLM / Gemini API**, ensuring advanced natural language reasoning and up-to-date web content understanding.  \n- The Gemini model is responsible for interpreting page HTML contextually and generating expert-level recommendations.\n\n### 5. 🪄 **Result Display (Form Output)**\n- The output is displayed instantly via an n8n Form node titled **“CRO Result”**.\n- It presents the AI’s full audit text including:\n  - A short summary of your page performance  \n  - 10 detailed CRO recommendations  \n  - Personalized improvement ideas  \n  - Practical next steps for implementation  \n\n---",
+        "height": 1280,
+        "width": 1072
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -1072
+      ],
+      "typeVersion": 1,
+      "id": "f3aefac3-acc5-4676-ac59-f5b4692d5a35",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Scrape Website": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Landing Page Url": {
+      "main": [
+        [
+          {
+            "node": "Scrape Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrape Website1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Website1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "857562cc-67f8-477e-9b93-276483789dd2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  },
+  "id": "BiDDWC245hurFdqT",
+  "tags": []
+}
