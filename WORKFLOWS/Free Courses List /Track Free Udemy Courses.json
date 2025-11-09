@@ -1,0 +1,480 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "fd5ead2e-83d7-4899-9301-ba738237d97f",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        2240,
+        1680
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://udemy-coupons-and-courses.p.rapidapi.com/featured.php",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "udemy-coupons-and-courses.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "your key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "b3c5fe11-9df6-4ca8-9291-fea4f6766ebe",
+      "name": "Fetch Udemy Coupons1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2448,
+        1680
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "f251122a-946f-4d41-a0fc-f5ecd3fa03f3",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.body.success }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4cd13fe2-1712-403d-98c0-c13332d38b27",
+      "name": "Check API Success1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2688,
+        1680
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const courses = $input.first().json.courses;\nconst freeCourses = courses.filter(course => course.sale_price === 0);\nreturn freeCourses;\n"
+      },
+      "id": "f0ba3c8a-5bf1-42b4-bb22-93b956f24635",
+      "name": "Filter Free Courses1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2928,
+        1664
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fromEmail": "itadmin@test.com",
+        "toEmail": "dev@test.com",
+        "subject": "Udemy Coupons Fetch Error - Immediate Attention Required",
+        "html": "=Hello,\n\nAn error occurred while trying to fetch Udemy coupons from the API.\n\nPlease check the API and the workflow to resolve the issue.\n",
+        "options": {}
+      },
+      "id": "2be031a0-a125-4836-a140-e9ed640b60c9",
+      "name": "Send Error Notification1",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        2928,
+        2016
+      ],
+      "webhookId": "ef72fbe3-7945-4511-982e-8b5da3fde9a3",
+      "typeVersion": 2.1,
+      "credentials": {
+        "smtp": {
+          "id": "l44NKHDctob0Eq1K",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1NBw0Swf2LXbCGjfHm7bbMqE9zjuJBAoo-KuUsmi7fW8",
+          "mode": "list",
+          "cachedResultName": "Udemy Free Course",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NBw0Swf2LXbCGjfHm7bbMqE9zjuJBAoo-KuUsmi7fW8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "",
+          "cachedResultName": "Courses"
+        },
+        "columns": {
+          "value": {
+            "id": "={{ $json.id }}",
+            "name": "={{ $json.name }}",
+            "slug": "={{ $json.slug }}",
+            "image": "={{ $json.image }}",
+            "price": "={{ $json.price }}",
+            "store": "={{ $json.store }}",
+            "views": "={{ $json.views }}",
+            "rating": "={{ $json.rating }}",
+            "category": "={{ $json.category }}",
+            "language": "={{ $json.language }}",
+            "lectures": "={{ $json.lectures }}",
+            "sale_price": "={{ $json.sale_price }}",
+            "sale_start": "={{ $json.sale_start }}",
+            "subcategory": "={{ $json.subcategory }}"
+          },
+          "schema": [
+            {
+              "id": "id",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "id",
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "image",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "price",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "price",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sale_price",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "sale_price",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lectures",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "lectures",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "views",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "views",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rating",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "rating",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "language",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "language",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "category",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subcategory",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "subcategory",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "slug",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "slug",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "store",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "store",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sale_start",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "sale_start",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d59ccaac-ed32-4664-859a-c39868d3e8f8",
+      "name": "Sync Courses to Google Sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3232,
+        1664
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Schedule Trigger  \nTriggers the workflow on an hourly schedule.  \nStarts the process of fetching Udemy coupons automatically.",
+        "height": 304
+      },
+      "id": "04a57ae4-dc4f-4104-a8e4-cd115d1298f1",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        1536
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Fetch Udemy Coupons  \nSends a POST request to fetch featured Udemy courses via API.  \nIncludes necessary headers and form-data for the API call.",
+        "height": 304
+      },
+      "id": "86b99099-e927-43b2-ab4f-0869681e67fe",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2400,
+        1536
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Check API Success  \nChecks if the API response indicates a successful fetch.  \nRoutes workflow either to filter courses or send an error notification.\n",
+        "height": 304
+      },
+      "id": "588fade6-c61f-4915-8e29-17063ccbbb71",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2656,
+        1536
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n### Filter Free Courses  \nFilters out only free courses where sale price is zero.  \nPrepares data for syncing with Google Sheets.",
+        "height": 304
+      },
+      "id": "fad0919f-9ceb-4195-a4c5-c2aeeb0701e6",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2912,
+        1536
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Send Error Notification  \nSends an email alert if the API fetch fails.  \nNotifies the admin to check the workflow or API.",
+        "height": 272
+      },
+      "id": "3222325a-cb52-4560-9599-2d4baabbcb7e",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2880,
+        1888
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Sync Courses to Google Sheet  \nAdds or updates filtered courses into the Google Sheet.  \nEnsures the sheet is always up-to-date with latest free courses.",
+        "height": 304
+      },
+      "id": "d0e1bf5a-4692-4bc6-bca8-05b8fac85e05",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3168,
+        1536
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Udemy Coupons1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Udemy Coupons1": {
+      "main": [
+        [
+          {
+            "node": "Check API Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check API Success1": {
+      "main": [
+        [
+          {
+            "node": "Filter Free Courses1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Notification1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Free Courses1": {
+      "main": [
+        [
+          {
+            "node": "Sync Courses to Google Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  }
+}
