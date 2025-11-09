@@ -1,0 +1,562 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "be8685e0-3f4a-4dbe-b99a-c2517695e76d",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        912,
+        288
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "url": "https://udemy-paid-courses-for-free-api.p.rapidapi.com/rapidapi/courses/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "page_size",
+              "value": "10"
+            },
+            {
+              "name": "query",
+              "value": "python"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "udemy-paid-courses-for-free-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "your_api_key"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "c74fe8e9-473b-40c7-86a0-a36ed274ff4d",
+      "name": "Fetch Udemy Coupons",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1136,
+        288
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f251122a-946f-4d41-a0fc-f5ecd3fa03f3",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "={{ 200 }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "23b8cb0c-c662-4500-8c34-1483b2baebe1",
+      "name": "Check API Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1360,
+        288
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const courses = $input.first().json.body.courses;\n\n// Filter courses where sale_price == 0\nconst freeCourses = courses.filter(course => course.sale_price_usd === 0);\n\nreturn freeCourses;\n"
+      },
+      "id": "be83cf96-763f-4234-8098-9ad604c01842",
+      "name": "Filter Free Courses",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1648,
+        272
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fromEmail": "itadmin@test.com",
+        "toEmail": "dev@test.com",
+        "subject": "Udemy Coupons Fetch Error - Immediate Attention Required",
+        "html": "=Hello,\n\nAn error occurred while trying to fetch Udemy coupons from the API.\n\nPlease check the API and the workflow to resolve the issue.\n",
+        "options": {}
+      },
+      "id": "24c101cc-4173-40f3-8b1f-6f12e4bf44f5",
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        1600,
+        624
+      ],
+      "webhookId": "ef72fbe3-7945-4511-982e-8b5da3fde9a3",
+      "typeVersion": 2.1,
+      "credentials": {
+        "smtp": {
+          "id": "l44NKHDctob0Eq1K",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1NBw0Swf2LXbCGjfHm7bbMqE9zjuJBAoo-KuUsmi7fW8",
+          "mode": "list",
+          "cachedResultName": "Udemy Free Course",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NBw0Swf2LXbCGjfHm7bbMqE9zjuJBAoo-KuUsmi7fW8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NBw0Swf2LXbCGjfHm7bbMqE9zjuJBAoo-KuUsmi7fW8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "actual_price_usd",
+              "displayName": "actual_price_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sale_price_usd",
+              "displayName": "sale_price_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sale_end",
+              "displayName": "sale_end",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clean_url",
+              "displayName": "clean_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e6a8a64a-95a0-4732-92e2-d2b52d57119e",
+      "name": "Sync Courses to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1936,
+        272
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Schedule Trigger  \nTriggers the workflow on an hourly schedule.  \nStarts the process of fetching Udemy coupons automatically.",
+        "height": 320
+      },
+      "id": "c73673e9-211b-458a-9634-ed40ed807f63",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        816,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Fetch Udemy Coupons  \nSends a POST request to fetch featured Udemy courses via API.  \nIncludes necessary headers and form-data for the API call.",
+        "height": 320
+      },
+      "id": "b16643a6-3a00-4667-bf72-b998620015f6",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Check API Success  \nChecks if the API response indicates a successful fetch.  \nRoutes workflow either to filter courses or send an error notification.\n",
+        "height": 320
+      },
+      "id": "b3b756f7-ddc2-428c-8292-f19b8895256a",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1328,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n### Filter Free Courses  \nFilters out only free courses where sale price is zero.  \nPrepares data for syncing with Google Sheets.",
+        "height": 320
+      },
+      "id": "bb1ede5c-5054-464a-8fb4-76f853e64d9f",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Send Error Notification  \nSends an email alert if the API fetch fails.  \nNotifies the admin to check the workflow or API.",
+        "height": 272
+      },
+      "id": "1e174a55-1166-4b7e-9161-cb355017413b",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1552,
+        496
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Sync Courses to Google Sheet  \nAdds or updates filtered courses into the Google Sheet.  \nEnsures the sheet is always up-to-date with latest free courses.",
+        "height": 320
+      },
+      "id": "875ef0e2-355a-47b1-95d0-56cc848337ec",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1856,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Automated Udemy Coupon Fetching & Google Sheets Sync\n\n### Description\n\nFetches free Udemy courses hourly via API and syncs them with Google Sheets, sending error alerts if needed.\n\n### Summary\n\nAutomates fetching featured Udemy coupons, filters only free courses, and updates a Google Sheet. Sends email notifications on API errors for quick fixes.\n\n### Node Overview\n\n1. **Schedule Trigger:** Runs workflow hourly.\n2. **Fetch Udemy Coupons:** Requests featured courses via API.\n3. **Check API Success:** Confirms successful data fetch.\n4. **Filter Free Courses:** Selects courses with sale price zero.\n5. **Send Error Notification:** Emails admin on API failure.\n6. **Sync Courses to Google Sheet:** Updates Google Sheet with free courses.\n\n",
+        "height": 592,
+        "width": 608
+      },
+      "id": "fab1a199-3b46-4fb4-bd2d-74752ecdd334",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        128,
+        16
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Udemy Coupons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Udemy Coupons": {
+      "main": [
+        [
+          {
+            "node": "Check API Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check API Success": {
+      "main": [
+        [
+          {
+            "node": "Filter Free Courses",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Free Courses": {
+      "main": [
+        [
+          {
+            "node": "Sync Courses to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Fetch Udemy Coupons": [
+      {
+        "body": {
+          "courses": [
+            {
+              "name": "100% OFF- Python App Development Masterclass App Development Bootcamp",
+              "category": "App Development",
+              "image": "https://img-c.udemycdn.com/course/480x270/6185803_45d9.jpg",
+              "actual_price_usd": 39.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-10T10:05:00",
+              "description": "Python App Development Masterclass App Development Bootcamp , Build Real-World Applications with Python: A Complete App Development Bootcamp for Beginners to ...",
+              "url": "https://www.udemy.com/course/python-app-development-masterclass-app-development-bootcamp/?couponCode=46300C45245D49DC024D",
+              "clean_url": "https://www.udemy.com/course/python-app-development-masterclass-app-development-bootcamp/"
+            },
+            {
+              "name": "100% OFF- Python Machine Learning: From Beginner to Pro",
+              "category": "Development",
+              "image": "https://img-c.udemycdn.com/course/480x270/6136815_6345_2.jpg",
+              "actual_price_usd": 39.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-10T10:06:00",
+              "description": "Python Machine Learning: From Beginner to Pro , Machine Learning Tutorial: Python-Based Predictive Analytics.\r\nCourse Description\r\n\r\n\r\n\r\n\r\nAre you eager to ...",
+              "url": "https://www.udemy.com/course/python-machine-learning-from-beginner-to-pro/?couponCode=BE8770099C03C8418158",
+              "clean_url": "https://www.udemy.com/course/python-machine-learning-from-beginner-to-pro/"
+            },
+            {
+              "name": "100% OFF- Python Game Development and App Programming Masterclass",
+              "category": "Development",
+              "image": "https://img-c.udemycdn.com/course/480x270/6894225_32bd.jpg",
+              "actual_price_usd": 54.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-11T13:58:00",
+              "description": "Python Game Development and App Programming Masterclass, Complete Python programming for game development and app building with hands-on projects and ...",
+              "url": "https://www.udemy.com/course/python-game-development-and-app-programming-masterclass/?couponCode=9724D339503CEEBB4022",
+              "clean_url": "https://www.udemy.com/course/python-game-development-and-app-programming-masterclass/"
+            },
+            {
+              "name": "100% OFF- Python from Zero-to-Hero (Beginner Level)",
+              "category": "Development",
+              "image": "https://img-c.udemycdn.com/course/480x270/6095163_4255_2.jpg",
+              "actual_price_usd": 44.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-11T14:52:00",
+              "description": "Python from Zero-to-Hero (Beginner Level) , Get familiar with Python, a modern programming language and start coding your first programs.\r\nCourse Description\r\n ...",
+              "url": "https://www.udemy.com/course/python-from-zero-to-hero-beginner-level/?couponCode=C8F9A2C7574FE06A3551",
+              "clean_url": "https://www.udemy.com/course/python-from-zero-to-hero-beginner-level/"
+            },
+            {
+              "name": "Python course from Zero-to-Hero – Intermediate Level",
+              "category": "Development",
+              "image": "https://img-c.udemycdn.com/course/480x270/6427889_de98.jpg",
+              "actual_price_usd": 19.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-11T14:52:00",
+              "description": "Python course from Zero-to-Hero - Intermediate Level , Master Python with intermediate topics, hands-on projects, quizzes, and lifetime access. Learn ...",
+              "url": "https://www.udemy.com/course/python-course-from-zero-to-hero-intermediate-level/?couponCode=22CB4B847F417CA03861",
+              "clean_url": "https://www.udemy.com/course/python-course-from-zero-to-hero-intermediate-level/"
+            },
+            {
+              "name": "Machine Learning and Deep Learning Projects in Python",
+              "category": "Data Science",
+              "image": "https://img-c.udemycdn.com/course/480x270/5424444_410a_2.jpg",
+              "actual_price_usd": 59.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-11T19:11:00",
+              "description": "Machine Learning and Deep Learning Projects in Python , 20 practical projects of Machine Learning and Deep Learning and their implementation in Python along ...",
+              "url": "https://www.udemy.com/course/machine-learning-and-deep-learning-projects-in-python/?couponCode=06E4FAB752E97E940882",
+              "clean_url": "https://www.udemy.com/course/machine-learning-and-deep-learning-projects-in-python/"
+            },
+            {
+              "name": "100% OFF- Data Visualization with Python and New Methods in Matplotlib",
+              "category": "Data Science",
+              "image": "https://img-c.udemycdn.com/course/480x270/5056226_591b_2.jpg",
+              "actual_price_usd": 44.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-11T19:12:00",
+              "description": "Data Visualization with Python and New Methods in Matplotlib, Step-by-step training for 3D and advanced visualization in python and Matplotlib (with all the ...",
+              "url": "https://www.udemy.com/course/advanced-data-visualization-with-python/?couponCode=BC6C5FC2C1C00F3984CF",
+              "clean_url": "https://www.udemy.com/course/advanced-data-visualization-with-python/"
+            },
+            {
+              "name": "100% OFF- AI & Python Development Megaclass – 300+ Hands-on Projects",
+              "category": "Data Science",
+              "image": "https://img-c.udemycdn.com/course/480x270/6496525_b818_3.jpg",
+              "actual_price_usd": 19.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-12T14:00:00",
+              "description": "AI & Python Development Megaclass - 300+ Hands-on Projects , Training in Machine Learning, Deep Learning, Data Science, Computer Vision, NLP, Chatbots, and ...",
+              "url": "https://www.udemy.com/course/ai-python-development-megaclass-300-hands-on-projects/?couponCode=NOV_FREE_03",
+              "clean_url": "https://www.udemy.com/course/ai-python-development-megaclass-300-hands-on-projects/"
+            },
+            {
+              "name": "100% OFF- Decoding Market Timing: An Insightful Introduction /R+PyCode",
+              "category": "Finance & Accounting",
+              "image": "https://img-c.udemycdn.com/course/480x270/6733213_bf23_8.jpg",
+              "actual_price_usd": 44.99,
+              "sale_price_usd": 0,
+              "sale_end": "2025-11-13T09:13:00",
+              "description": "Decoding Market Timing: An Insightful Introduction /R+PyCode, Explore core principles, test methods with R and Python, and gain innovative insights into ...",
+              "url": "https://www.udemy.com/course/decoding-market-timing-an-insightful-introduction/?couponCode=DR_OZIMEK_10",
+              "clean_url": "https://www.udemy.com/course/decoding-market-timing-an-insightful-introduction/"
+            }
+          ],
+          "total": 9
+        },
+        "headers": {
+          "date": "Sun, 09 Nov 2025 08:18:12 GMT",
+          "content-type": "application/json",
+          "content-length": "5775",
+          "connection": "close",
+          "x-ratelimit-rapid-free-plans-hard-limit-limit": "500000",
+          "x-ratelimit-rapid-free-plans-hard-limit-remaining": "499999",
+          "x-ratelimit-rapid-free-plans-hard-limit-reset": "2591992",
+          "x-ratelimit-requests-limit": "100",
+          "x-ratelimit-requests-remaining": "99",
+          "x-ratelimit-requests-reset": "2591992",
+          "server": "RapidAPI-1.2.8",
+          "x-rapidapi-version": "1.2.8",
+          "x-rapidapi-region": "AWS - ap-southeast-1",
+          "x-rapidapi-request-id": "bdb7ea0ec44afadbb45a67a1240abd29e76b8a16ba42228914e6c43e44bdce9e"
+        },
+        "statusCode": 200,
+        "statusMessage": "OK"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  }
+}
