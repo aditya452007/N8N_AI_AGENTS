@@ -1,0 +1,359 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "resultsPerPage",
+              "value": 10
+            },
+            {
+              "name": "startIndex",
+              "value": 1
+            },
+            {
+              "name": "pageCounter",
+              "value": 1
+            },
+            {
+              "name": "maxPages",
+              "value": 10
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        2112
+      ],
+      "id": "c6186c33-2e58-49de-82c2-f5684c24ac38"
+    },
+    {
+      "parameters": {
+        "functionCode": "/*\n  Extract Results: produce one item per search result.\n  Adds pagination meta so downstream nodes can use:\n    - startIndex, pageCounter, resultsPerPage, lastResultsCount\n*/\nconst res = items[0] && items[0].json ? items[0].json : {};\nconst itemsArr = Array.isArray(res.items) ? res.items : [];\n\n// Try to read pagination info from the Google Custom Search response\n// (CSE returns queries.request[0].startIndex and queries.request[0].count)\nlet startIndex = 1;\nlet resultsPerPage = 10;\n\nif (res.queries && res.queries.request && Array.isArray(res.queries.request) && res.queries.request[0]) {\n  startIndex = Number(res.queries.request[0].startIndex || startIndex);\n  resultsPerPage = Number(res.queries.request[0].count || resultsPerPage);\n}\n\n// compute pageCounter robustly: fallback if startIndex/resultsPerPage exist\nconst pageCounter = Number(Math.floor((Number(startIndex || 1) - 1) / Number(resultsPerPage || 1)) + 1);\n\n// last results count for this page\nconst lastResultsCount = itemsArr.length;\n\nconst out = itemsArr.map((it) => {\n  const url = it.link || it.formattedUrl || '';\n  return {\n    json: {\n      title: it.title || '',\n      snippet: it.snippet || it.htmlSnippet || '',\n      url,\n      startIndex,\n      pageCounter,\n      resultsPerPage,\n      lastResultsCount,\n      _noResults: false\n    }\n  };\n});\n\n// If no results, still return a single item carrying meta so Append/Pagination read it\nif (out.length === 0) {\n  return [{\n    json: {\n      title: '',\n      snippet: '',\n      url: '',\n      startIndex,\n      pageCounter,\n      resultsPerPage,\n      lastResultsCount: 0,\n      _noResults: true\n    }\n  }];\n}\n\nreturn out;\n"
+      },
+      "name": "Extract Results2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        2112
+      ],
+      "id": "8f52b372-05ed-400d-90d6-3553793922be"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1pvySisPseVjiSDpHKHwS_SNu7dYoyLOJ2IoyaxxydFk",
+          "mode": "list",
+          "cachedResultName": "linkedin",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pvySisPseVjiSDpHKHwS_SNu7dYoyLOJ2IoyaxxydFk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1830744995,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pvySisPseVjiSDpHKHwS_SNu7dYoyLOJ2IoyaxxydFk/edit#gid=1830744995"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2304,
+        2112
+      ],
+      "id": "c18b38bb-4056-4b2e-8640-9ae9ce59e6bf",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/*\n  Pagination node: read aggregated metadata and compute nextStart/nextPageCounter.\n  Expects incoming item(s) to include:\n    - lastResultsCount\n    - resultsPerPage\n    - pageCounter OR startIndex (we derive current page if needed)\n    - maxPages (optional; default to 10)\n*/\nconst meta = (items[0] && items[0].json) ? items[0].json : {};\n\n// read atomic values with fallbacks\nconst lastResultsCount = Number(meta.lastResultsCount || 0);\nconst resultsPerPage = Number(meta.resultsPerPage || 10);\nconst prevStart = Number(meta.startIndex || ((Number(meta.pageCounter || 1) - 1) * resultsPerPage + 1) || 1);\n\n// compute current pageCounter robustly\nconst currentPageCounter = Number(meta.pageCounter || Math.floor((prevStart - 1) / (resultsPerPage || 1)) + 1);\n\n// maxPages default fallback\nconst maxPages = Number(meta.maxPages || 10);\n\n// compute next values\nconst nextStart = prevStart + resultsPerPage;\nconst nextPageCounter = currentPageCounter + 1;\n\nreturn [{\n  json: {\n    lastResultsCount,\n    currentPageCounter,\n    resultsPerPage,\n    maxPages,\n    nextStart,\n    nextPageCounter\n  }\n}];\n"
+      },
+      "name": "Pagination2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        2112
+      ],
+      "id": "8734a73d-a4c3-4312-8762-61bd12ab6c8b"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Optional final node to produce summary\nreturn [{ json: { text: `Workflow finished. Pages processed: ${$json.currentPageCounter || 'N/A'}` } }];"
+      },
+      "name": "Finalize - Notify2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        2096
+      ],
+      "id": "d1b460ad-c400-4a71-bbb2-434ca778a1b0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ Number($json.nextPageCounter) }}",
+              "operation": "larger",
+              "value2": "={{ Number($json.maxPages) }}"
+            }
+          ],
+          "boolean": [],
+          "string": []
+        }
+      },
+      "name": "Pagination Check2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        2112
+      ],
+      "id": "e91b78fd-2133-49b2-b7e8-a94e190ddbd1"
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "startIndex",
+              "value": "={{ Number($json.nextStart || $json.startIndex || 1) }}"
+            },
+            {
+              "name": "pageCounter",
+              "value": "={{ Number($json.nextPageCounter || $json.pageCounter || 1) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Next Page2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        2256
+      ],
+      "id": "f91d29d5-e036-433c-93c4-4fe5380a5239"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1984,
+        2112
+      ],
+      "id": "00890647-eb47-413b-ac50-9a9ff514b83f",
+      "name": "Wait2",
+      "webhookId": "a665166e-a250-4a73-988a-39453c704f0b"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/customsearch/v1",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "key",
+              "value": "=Your_Key"
+            },
+            {
+              "name": "cx",
+              "value": "=Your value"
+            },
+            {
+              "name": "q",
+              "value": "=site:linkedin.com/jobs (junior OR \"entry level\") (\"ai\" OR \"ai developer\") (\"ai engineer\" OR \"prompt enigneer\")"
+            },
+            {
+              "name": "start",
+              "value": "={{$json.startIndex}}"
+            },
+            {
+              "name": "num",
+              "value": "={{$json.resultsPerPage}}"
+            },
+            {
+              "name": "dateRestrict",
+              "value": "d1"
+            },
+            {
+              "name": "t",
+              "value": "86400"
+            },
+            {
+              "name": "gl",
+              "value": "IN"
+            }
+          ]
+        }
+      },
+      "name": "Google search2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        2112
+      ],
+      "id": "a6701a93-5f96-431e-b372-70b07493d88f"
+    },
+    {
+      "parameters": {
+        "content": "# Linkedin Job Search   \nSearch for job posting within 24 hours",
+        "height": 304,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        1984
+      ],
+      "typeVersion": 1,
+      "id": "6c10b7bf-d556-4288-a98f-fe5e2d6c0d2b",
+      "name": "Sticky Note2"
+    }
+  ],
+  "connections": {
+    "Set Fields2": {
+      "main": [
+        [
+          {
+            "node": "Google search2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Results2": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Pagination2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagination2": {
+      "main": [
+        [
+          {
+            "node": "Pagination Check2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagination Check2": {
+      "main": [
+        [
+          {
+            "node": "Finalize - Notify2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Next Page2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Next Page2": {
+      "main": [
+        [
+          {
+            "node": "Google search2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google search2": {
+      "main": [
+        [
+          {
+            "node": "Extract Results2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  }
+}
