@@ -1,0 +1,600 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "resultsPerPage",
+              "value": 10
+            },
+            {
+              "name": "startIndex",
+              "value": 1
+            },
+            {
+              "name": "pageCounter",
+              "value": 1
+            },
+            {
+              "name": "maxPages",
+              "value": 10
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1376
+      ],
+      "id": "a2f94ef2-93d3-4240-8f0d-0ae990a51478"
+    },
+    {
+      "parameters": {
+        "functionCode": "/*\n  Extract Results: produce one item per search result.\n  Adds pagination meta so downstream nodes can use:\n    - startIndex, pageCounter, resultsPerPage, lastResultsCount\n*/\nconst res = items[0] && items[0].json ? items[0].json : {};\nconst itemsArr = Array.isArray(res.items) ? res.items : [];\n\n// Try to read pagination info from the Google Custom Search response\n// (CSE returns queries.request[0].startIndex and queries.request[0].count)\nlet startIndex = 1;\nlet resultsPerPage = 10;\n\nif (res.queries && res.queries.request && Array.isArray(res.queries.request) && res.queries.request[0]) {\n  startIndex = Number(res.queries.request[0].startIndex || startIndex);\n  resultsPerPage = Number(res.queries.request[0].count || resultsPerPage);\n}\n\n// compute pageCounter robustly: fallback if startIndex/resultsPerPage exist\nconst pageCounter = Number(Math.floor((Number(startIndex || 1) - 1) / Number(resultsPerPage || 1)) + 1);\n\n// last results count for this page\nconst lastResultsCount = itemsArr.length;\n\nconst out = itemsArr.map((it) => {\n  const url = it.link || it.formattedUrl || '';\n  return {\n    json: {\n      title: it.title || '',\n      snippet: it.snippet || it.htmlSnippet || '',\n      url,\n      startIndex,\n      pageCounter,\n      resultsPerPage,\n      lastResultsCount,\n      _noResults: false\n    }\n  };\n});\n\n// If no results, still return a single item carrying meta so Append/Pagination read it\nif (out.length === 0) {\n  return [{\n    json: {\n      title: '',\n      snippet: '',\n      url: '',\n      startIndex,\n      pageCounter,\n      resultsPerPage,\n      lastResultsCount: 0,\n      _noResults: true\n    }\n  }];\n}\n\nreturn out;\n"
+      },
+      "name": "Extract Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        1376
+      ],
+      "id": "0b5ffe5d-76f9-4fd3-a5c3-375de476c584"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs",
+          "mode": "list",
+          "cachedResultName": "Amzon scarper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 72045684,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit#gid=72045684"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        1376
+      ],
+      "id": "90849f10-98e5-4c59-9f36-1bdddf694fcb",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/*\n  Pagination node: read aggregated metadata and compute nextStart/nextPageCounter.\n  Expects incoming item(s) to include:\n    - lastResultsCount\n    - resultsPerPage\n    - pageCounter OR startIndex (we derive current page if needed)\n    - maxPages (optional; default to 10)\n*/\nconst meta = (items[0] && items[0].json) ? items[0].json : {};\n\n// read atomic values with fallbacks\nconst lastResultsCount = Number(meta.lastResultsCount || 0);\nconst resultsPerPage = Number(meta.resultsPerPage || 10);\nconst prevStart = Number(meta.startIndex || ((Number(meta.pageCounter || 1) - 1) * resultsPerPage + 1) || 1);\n\n// compute current pageCounter robustly\nconst currentPageCounter = Number(meta.pageCounter || Math.floor((prevStart - 1) / (resultsPerPage || 1)) + 1);\n\n// maxPages default fallback\nconst maxPages = Number(meta.maxPages || 10);\n\n// compute next values\nconst nextStart = prevStart + resultsPerPage;\nconst nextPageCounter = currentPageCounter + 1;\n\nreturn [{\n  json: {\n    lastResultsCount,\n    currentPageCounter,\n    resultsPerPage,\n    maxPages,\n    nextStart,\n    nextPageCounter\n  }\n}];\n"
+      },
+      "name": "Pagination",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2608,
+        1376
+      ],
+      "id": "fa0c6165-da15-4c49-9c40-908c27443178"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Optional final node to produce summary\nreturn [{ json: { text: `Workflow finished. Pages processed: ${$json.currentPageCounter || 'N/A'}` } }];"
+      },
+      "name": "Finalize - Notify",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        1360
+      ],
+      "id": "e713dceb-2dc6-4f27-a562-cca2201d820c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ Number($json.nextPageCounter) }}",
+              "operation": "larger",
+              "value2": "={{ Number($json.maxPages) }}"
+            }
+          ],
+          "boolean": [],
+          "string": []
+        }
+      },
+      "name": "Pagination Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        1376
+      ],
+      "id": "d5f52df6-f910-48a5-80bb-512b03daa87c"
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "startIndex",
+              "value": "={{ Number($json.nextStart || $json.startIndex || 1) }}"
+            },
+            {
+              "name": "pageCounter",
+              "value": "={{ Number($json.nextPageCounter || $json.pageCounter || 1) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Next Page1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        3216,
+        1520
+      ],
+      "id": "4d068410-8315-482b-9626-7c5881f5a4ef"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1968,
+        1376
+      ],
+      "id": "50bbc13d-5f3c-4e4c-a51f-a670f112f4ad",
+      "name": "Wait",
+      "webhookId": "a665166e-a250-4a73-988a-39453c704f0b"
+    },
+    {
+      "parameters": {
+        "content": "# Linkedin Ceo Emails",
+        "height": 304,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1184,
+        1248
+      ],
+      "typeVersion": 1,
+      "id": "c48585d1-d4ac-41a9-875f-4744e45abeaa",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs",
+          "mode": "list",
+          "cachedResultName": "Amzon scarper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 72045684,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit#gid=72045684"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        1856
+      ],
+      "id": "3ce2f637-1426-47cf-9d76-346a307e1aca",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Hi,{{ $json.name }}",
+        "message": "=Hi,{{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        1856
+      ],
+      "id": "9184bfb6-fc78-4b35-b817-0360fbc03bcf",
+      "name": "Send a message1",
+      "webhookId": "5ebcff92-d70e-49f6-bb53-28e938b9f6de",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IsjMFSZhFVjNT0lW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs",
+          "mode": "list",
+          "cachedResultName": "Amzon scarper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 72045684,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13EBS2RxESGoTjtpA3gYwVTQKEL4AabCyOJngnowFCgs/edit#gid=72045684"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sent": "={{ $json.labelIds[0] }}"
+          },
+          "matchingColumns": [
+            "Sent"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "snippet",
+              "displayName": "snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pageCounter",
+              "displayName": "pageCounter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resultsPerPage",
+              "displayName": "resultsPerPage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lastResultsCount",
+              "displayName": "lastResultsCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "_noResults",
+              "displayName": "_noResults",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "startIndex",
+              "displayName": "startIndex",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sent",
+              "displayName": "Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        1856
+      ],
+      "id": "46e4f216-282a-4071-9130-91eed5c7e87e",
+      "name": "Append or update row in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hHo8q1NKE0DjrayM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Strict regex for Gmail/Yahoo emails\nconst EMAIL_RE = /([A-Za-z0-9._%+-]+)\\s*@\\s*(gmail|yahoo)\\.com/ig;\n\n// Clean name function\nfunction cleanName(str) {\n  if (!str) return null;\n\n  let s = str;\n\n  // Remove role/position words\n  s = s.replace(/\\b(CEO|Founder|Co-Founder|Director|Manager|Head|Lead|Owner|Entrepreneur|Chief|Executive|Officer)\\b/ig, \"\");\n\n  // Remove bracketed content\n  s = s.replace(/[\\(\\[\\{].*?[\\)\\]\\}]/g, \"\");\n\n  // Keep only first part (e.g., remove company names)\n  s = s.split(/[-|:,•–—]/)[0];\n\n  // Collapse spaces\n  s = s.replace(/\\s+/g, \" \").trim();\n\n  // Validation\n  if (!/[A-Za-z]/.test(s)) return null;\n  if (s.length < 2 || s.length > 80) return null;\n\n  return s;\n}\n\nconst out = [];\n\nfor (const item of $input.all()) {\n  const title = item.json.title || \"\";\n  const snippet = item.json.snippet || \"\";\n\n  // Extract name from title\n  const name = cleanName(title);\n\n  // Extract email from snippet\n  let email = null;\n  EMAIL_RE.lastIndex = 0;\n  const match = EMAIL_RE.exec(snippet);\n  if (match) {\n    const local = match[1].replace(/\\s+/g, \"\");\n    const domain = match[2].toLowerCase() + \".com\";\n    email = `${local}@${domain}`;\n  }\n\n  out.push({\n    json: {\n      name: name || null,\n      email: email || null,\n      original: item.json   // keep original row if needed\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        1856
+      ],
+      "id": "b8f2bc64-64fd-43ad-bb6c-61199d2ac1dd",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.filter(item => {\n  try {\n    const email = item.json && item.json.email;\n    if (!email) return false;\n    const s = email.toString().trim();\n    // simple email validation\n    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(s);\n  } catch (e) {\n    return false;\n  }\n});"
+      },
+      "name": "Filter emails1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        1856
+      ],
+      "id": "5afe3fe1-fe0b-4d84-a6ae-f89d132c271e"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/customsearch/v1",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "key",
+              "value": "=your key"
+            },
+            {
+              "name": "cx",
+              "value": "=your cx"
+            },
+            {
+              "name": "q",
+              "value": "=site:linkedin.com/in (intitle:\"CEO\" OR \"Chief Executive Officer\") (intext:\"@gmail.com\" OR intext:\"@yahoo.com\") -site:linkedin.com/jobs -site:linkedin.com/company"
+            },
+            {
+              "name": "start",
+              "value": "={{$json.startIndex}}"
+            },
+            {
+              "name": "num",
+              "value": "={{$json.resultsPerPage}}"
+            },
+            {
+              "name": "gl",
+              "value": "IN"
+            }
+          ]
+        }
+      },
+      "name": "Search Linkedin Emails1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1376
+      ],
+      "id": "62112479-39a3-41fa-8239-fb04c161fe78"
+    }
+  ],
+  "connections": {
+    "Set Fields": {
+      "main": [
+        [
+          {
+            "node": "Search Linkedin Emails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Results": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Pagination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagination": {
+      "main": [
+        [
+          {
+            "node": "Pagination Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagination Check": {
+      "main": [
+        [
+          {
+            "node": "Finalize - Notify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Next Page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Next Page1": {
+      "main": [
+        [
+          {
+            "node": "Search Linkedin Emails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Filter emails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter emails1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Linkedin Emails1": {
+      "main": [
+        [
+          {
+            "node": "Extract Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  }
+}
