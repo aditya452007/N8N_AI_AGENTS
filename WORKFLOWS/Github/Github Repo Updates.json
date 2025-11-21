@@ -1,0 +1,350 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "cfa178a7-ebd1-4744-b35c-75bff659a5ef",
+      "name": "Daily Check at 10 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -1584,
+        16
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "getPullRequests",
+        "owner": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://github.com/n8n-io"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "list",
+          "value": "n8n",
+          "cachedResultUrl": "https://github.com/n8n-io/n8n",
+          "cachedResultName": "n8n"
+        },
+        "limit": 1,
+        "getRepositoryPullRequestsFilters": {}
+      },
+      "id": "b2402e81-a9eb-4ea1-889e-05629ab319c2",
+      "name": "Fetch Latest Pull Request",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        -1216,
+        16
+      ],
+      "webhookId": "568e4e81-6d8f-47f6-9c61-172ecc2c97bb",
+      "typeVersion": 1.1,
+      "credentials": {
+        "githubApi": {
+          "id": "oJREkaD5jPdnRKhZ",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42ee224f-6cf4-424f-9e7a-aaa3d48011db",
+              "name": "Summary",
+              "type": "string",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c324b835-1ff6-44e9-aca4-b4a6c884de5e",
+      "name": "Extract PR Summary",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -528,
+        16
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the update to process:\n\n{{ $json.Summary }}\n\nRelease date of this update:\n{{ $('Fetch Latest Pull Request').item.json.created_at }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=# Role\nYou are an expert at explaining GitHub repository updates for the n8n platform.\n\n# Context\nYou will receive the latest n8n update and a summary of what will be modified in the tool.\n\nYour goal is to translate the update summary into English (if needed), using simple words while not forgetting the important technical details in the summary.\n\nThe purpose is to send a message on Telegram to users who are interested in having the latest n8n update, which is their most important work tool.\n\n# Instructions\n- The summary should be detailed but relatively short without being unreadable\n- Write in bullet points for each modification specified in the summary\n- Never write \"Here is the summary\". Instead write \"Summary of the new n8n update from (date in DD-MMMM-YYYY format)\"\n- Keep technical terminology accurate\n- Make it scannable and easy to understand\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "61e9dc49-6c0b-41b6-8a9e-cc241f344b59",
+      "name": "Generate AI Summary",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -176,
+        16
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "chatId": "Your chat id",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "7eddd831-8cfa-438e-bde2-26d5553e9229",
+      "name": "Send to Telegram Channel",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        288,
+        16
+      ],
+      "webhookId": "009d3cab-2dc2-48d6-b8e5-64e6b62a1859",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "tIjSEEMRFgpWxAVE",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "508f3478-6db7-460d-85bb-67dc90c0443e",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              },
+              "leftValue": "={{ $json.created_at }}",
+              "rightValue": "={{ $today }}"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "80eee1cc-3d8d-4a71-bcc8-dfecaf6f62b7",
+      "name": "Filter Today's Updates Only",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        -880,
+        16
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## Step 1: Schedule Daily Check\n\n[Read about Schedule Trigger](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger/)\n\nThis node triggers the workflow automatically every day at 10 AM. You can customize the time to match your timezone or preferred notification schedule.\n\n**Tip:** Adjust the trigger time based on when n8n typically releases updates.",
+        "height": 448,
+        "width": 360,
+        "color": 7
+      },
+      "id": "5bd5e3ac-d930-4289-aac0-079e665e73ef",
+      "name": "Step 1 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1728,
+        -272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 2: Fetch Latest Pull Request\n\n[Read about GitHub node](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.github/)\n\nConnects to the n8n GitHub repository and retrieves the most recent pull request. The limit is set to 1 to only get the latest update.\n\n**Configuration:**\n- Owner: n8n-io\n- Repository: n8n\n- Limit: 1 PR\n\n**Note:** Make sure your GitHub credentials are properly configured.",
+        "height": 616,
+        "width": 360,
+        "color": 7
+      },
+      "id": "42b94337-c885-4d99-b244-a23909ca71a1",
+      "name": "Step 2 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1344,
+        -448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 3: Filter Today's Updates\n\n[Read about Filter node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.filter/)\n\nThis ensures you only receive notifications for pull requests created today, preventing duplicate notifications from older PRs.\n\n**Logic:** Checks if PR creation date is after today's date.\n\n**Why it matters:** Avoids spamming your Telegram with old updates.",
+        "height": 560,
+        "width": 280,
+        "color": 7
+      },
+      "id": "0d7af667-d592-464f-b1a7-c35d5a91ee43",
+      "name": "Step 3 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        -400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 4: Extract PR Summary\n\n[Read about Edit Fields node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.set/)\n\nExtracts the body/summary of the pull request into a clean field that can be passed to the AI model.\n\n**Output:** Clean summary text ready for AI processing.",
+        "height": 448,
+        "width": 360,
+        "color": 7
+      },
+      "id": "14be39ad-e34d-4855-9c07-987825e55721",
+      "name": "Step 4 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        -288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 5: Generate AI Summary\n\n[Read about LLM Chain](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.chainllm/)\n\nUses gemini to process the technical GitHub update and create a clear, scannable summary.\n\n**AI Instructions:**\n- Translate if needed\n- Use bullet points\n- Keep technical accuracy\n- Format with date\n- Make it readable\n\n",
+        "height": 684,
+        "width": 384,
+        "color": 7
+      },
+      "id": "9889b649-012b-402c-9374-8cc14b071830",
+      "name": "Step 5 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -272,
+        -528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 6: Send to Telegram\n\n[Read about Telegram node](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.telegram/)\n\nSends the AI-generated summary to your specified Telegram channel or chat.\n\n**Setup Required:**\n1. Create a Telegram bot via @BotFather\n2. Get your chat ID\n3. Replace `YOUR_TELEGRAM_CHAT_ID` in this node\n\n**Format:** HTML parsing enabled for rich formatting.\n\n**Tip:** You can send to multiple channels by duplicating this node.",
+        "height": 552,
+        "width": 392,
+        "color": 7
+      },
+      "id": "d8d385f2-4a2b-4a71-ad13-ba8c89d16006",
+      "name": "Step 6 Details",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        -400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -112
+      ],
+      "id": "2dc4b6e3-4f70-4a23-924a-acc5b0bfed72",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1XOF9sUJ0nX7ni5o",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Check at 10 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Latest Pull Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Latest Pull Request": {
+      "main": [
+        [
+          {
+            "node": "Filter Today's Updates Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PR Summary": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Today's Updates Only": {
+      "main": [
+        [
+          {
+            "node": "Extract PR Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed93f528c3d63bdece3e9fc28c38dcabe9395929b178a6a65fa14fb10c360c9"
+  }
+}
