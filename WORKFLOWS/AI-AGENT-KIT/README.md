@@ -20,7 +20,7 @@ Below is a list of the available agent kits in this directory. Each kit comes wi
 
 To use these workflows, you will need to have a running instance of n8n. You can then import the workflow files (`.json`) into your n8n instance.
 
-Please refer to the `Readme.md` file in each agent kit's directory for specific setup and usage instructions.
+Please refer to the `README.md` file in each agent kit's directory for specific setup and usage instructions.
 
 ---
 

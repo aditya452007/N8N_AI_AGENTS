@@ -8,7 +8,7 @@ This directory contains a collection of n8n workflows designed to integrate AI-p
 
 ### 🤖 AI Chatbot
 
-This workflow creates an AI-powered chatbot that can be embedded on any website. It uses a webhook to receive messages, an AI agent to generate responses, and maintains a simple memory to hold a conversation.
+This workflow creates an AI-powered chatbot that can be embedded on any website. Ituses a webhook to receive messages, an AI agent to generate responses, and maintains a simple memory to hold a conversation.
 
 #### Workflow Details
 
