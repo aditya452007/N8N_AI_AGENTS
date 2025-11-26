@@ -1839,7 +1839,7 @@
     },
     {
       "parameters": {
-        "jsCode": "for (const item of $input.all()) {\n    // Manually set the correct MIME type\n    item.binary.data.mimeType = \"image/jpeg\";\n    \n    // Convert binary to Base64\n    item.json.base64Image = `data:image/jpeg;base64,${item.binary.data.data.toString('base64')}`;\n}\n\nreturn $input.all();\n"
+        "jsCode": "/**\n * @description This code iterates through all input items, sets the MIME type of the binary data to 'image/jpeg', and converts the binary data to a Base64 string.\n * @returns {Array} An array of items with the binary data converted to Base64.\n */\nfor (const item of $input.all()) {\n    // Manually set the correct MIME type\n    item.binary.data.mimeType = \"image/jpeg\";\n    \n    // Convert binary to Base64\n    item.json.base64Image = `data:image/jpeg;base64,${item.binary.data.data.toString('base64')}`;\n}\n\nreturn $input.all();\n"
       },
       "id": "de49becf-2306-45be-9fe3-f90b8f973603",
       "name": "Code",
