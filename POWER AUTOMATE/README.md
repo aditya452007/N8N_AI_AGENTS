@@ -42,3 +42,19 @@ The script currently uses `LaunchChromeNoWait` and `CreateNewTabNoWait`. This te
 In your script, you are storing the output of each new tab into variables like `NewBrowser2`, `NewBrowser3`, etc. You also overwrite the `NewBrowser2` variable multiple times.
 
 * **Recommendation:** Since you aren't using these variables later (e.g., you're not interacting with the "GeeksforGeeks" tab specifically), you can simplify your flow. In the `CreateNewTab` action, you can just **disable the output variable** (or delete the variable name `NewBrowser2` from the "BrowserInstance" output field). This makes your flow cleaner and easier to read.
+
+---
+
+## 💻 Code
+
+Here is the code for the Power Automate Desktop flow:
+
+```
+WebAutomation.LaunchChrome.LaunchChromeNoWait Url: $'''https://www.youtube.com/''' WindowState: WebAutomation.BrowserWindowState.Maximized ClearCache: False ClearCookies: False Timeout: 30 TargetDesktop: $'''{\"DisplayName\":\"Local computer\",\"Route\":{\"ServerType\":\"Local\",\"ServerAddress\":\"\"},\"DesktopType\":\"local\"}''' BrowserInstance=> Browser
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://www.udemy.com/home/my-courses/learning/''' NewBrowserInstance=> NewBrowser3
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://www.geeksforgeeks.org/''' NewBrowserInstance=> NewBrowser2
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://web.telegram.org/a/''' NewBrowserInstance=> NewBrowser4
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://www.linkedin.com/feed/''' NewBrowserInstance=> NewBrowser
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://mail.google.com/mail/u/2/#inbox''' NewBrowserInstance=> NewBrowser2
+WebAutomation.CreateNewTab.CreateNewTabNoWait BrowserInstance: Browser Url: $'''https://in.tradingview.com/chart/isvXljVC/''' NewBrowserInstance=> NewBrowser2
+```
